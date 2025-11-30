@@ -8,12 +8,21 @@ env/
 venv/
 ENV/
 .venv/
+venv*/
+env*/
 build/
 dist/
 *.egg-info/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Virtual environment (recommended)
+.venv/
+venv/
+env/
+venv*/
+env*/
 
 # Environment
 .env

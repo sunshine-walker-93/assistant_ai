@@ -7,22 +7,28 @@ import os
 from pathlib import Path
 
 # Add project root to path
-project_root = Path(__file__).parent.parent.parent
+# Handle both direct execution and module execution
+if __file__:
+    project_root = Path(__file__).parent.parent.parent
+else:
+    # Fallback: use current working directory
+    project_root = Path.cwd()
+
 sys.path.insert(0, str(project_root))
 
 import grpc
 from concurrent import futures
 
-# Import generated protobuf code
-api_path = project_root.parent / "assistant_ai_api" / "python"
-if api_path.exists():
-    sys.path.insert(0, str(api_path))
-
+# Import generated protobuf code from installed package
+# assistant_ai_api is installed via pip from Git repository
 try:
     from pb.ai.v1 import ai_pb2_grpc
 except ImportError as e:
     print(f"Error: Could not import generated protobuf code: {e}")
-    print(f"Please run 'make gen-proto' in assistant_ai_api directory")
+    print("Please ensure assistant_ai_api is installed:")
+    print("  pip install git+https://github.com/sunshine-walker-93/assistant_ai_api.git#subdirectory=python")
+    import traceback
+    traceback.print_exc()
     sys.exit(1)
 
 from internal.config.config import load_config

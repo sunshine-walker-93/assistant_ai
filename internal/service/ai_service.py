@@ -3,24 +3,20 @@
 import logging
 from typing import Iterator
 import grpc
-
-# Import generated protobuf code
 import sys
-import os
 from pathlib import Path
 
-# Add assistant_ai_api python path
-project_root = Path(__file__).parent.parent.parent.parent
-api_path = project_root.parent / "assistant_ai_api" / "python"
-if api_path.exists():
-    sys.path.insert(0, str(api_path))
+logger = logging.getLogger(__name__)
 
+# Import generated protobuf code from installed package
+# assistant_ai_api is installed via pip from Git repository
 try:
     from pb.ai.v1 import ai_pb2
     from pb.ai.v1 import ai_pb2_grpc
 except ImportError as e:
     logger.error(f"Could not import generated protobuf code: {e}")
-    logger.error("Please run 'make gen-proto' in assistant_ai_api directory")
+    logger.error("Please ensure assistant_ai_api is installed:")
+    logger.error("  pip install git+https://github.com/sunshine-walker-93/assistant_ai_api.git#subdirectory=python")
     raise
 
 from ..agents.registry import AgentRegistry

@@ -5,7 +5,7 @@ services:
     container_name: assistant-ai-app
     restart: unless-stopped
     environment:
-      GRPC_ADDR: ":50052"
+      GRPC_ADDR: "0.0.0.0:50052"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # LLM API keys (set in .env file)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -14,13 +14,10 @@ services:
       - "50052:50052"
     networks:
       - assistant-net
-    volumes:
-      # Mount assistant_ai_api for generated protobuf code
-      - ../assistant_ai_api/python:/app/../assistant_ai_api/python:ro
 
 networks:
   # Reuse the network from assistant_account
   assistant-net:
-    external:
-      name: assistant_assistant-net
+    name: assistant_assistant-net
+    external: true
 

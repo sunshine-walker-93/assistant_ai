@@ -2,6 +2,10 @@
 grpcio>=1.62.0
 grpcio-tools>=1.62.0
 
+# Assistant AI API (from Git repository)
+# Note: Currently installed via script/install_api.sh
+# TODO: Add setup.py to assistant_ai_api/python directory for proper pip installation
+
 # LangChain and LangGraph
 langchain>=0.1.0
 langchain-core>=0.1.0

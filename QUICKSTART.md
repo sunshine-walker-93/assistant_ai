@@ -23,39 +23,55 @@
 
 ## 快速开始
 
-### 1. 生成 Protocol Buffer 代码
+### 1. 创建并激活虚拟环境（推荐）
 
 ```bash
-cd ../assistant_ai_api
-make gen-proto
+# 创建虚拟环境
+make venv
+
+# 激活虚拟环境
+source .venv/bin/activate  # macOS/Linux
+# 或
+.venv\Scripts\activate  # Windows
 ```
+
+**为什么使用虚拟环境？**
+- 隔离项目依赖，避免与系统 Python 包冲突
+- 便于版本管理和团队协作
+- 保持开发环境干净
 
 ### 2. 安装依赖
 
 ```bash
-cd ../assistant_ai
+# 使用 Makefile（自动检测并使用虚拟环境）
+make install
+
+# 或手动安装（确保已激活虚拟环境）
 pip install -r requirements.txt
 ```
+
+`assistant_ai_api` 会通过 pip 从 GitHub 仓库自动安装：
+- 仓库：https://github.com/sunshine-walker-93/assistant_ai_api
+- 自动安装生成的 Python 代码
 
 ### 3. 配置环境变量
 
 创建 `.env` 文件：
 
 ```env
-GRPC_ADDR=:50052
+GRPC_ADDR=0.0.0.0:50052
 LOG_LEVEL=INFO
+OPENAI_API_KEY=your_key_here  # 可选
+ANTHROPIC_API_KEY=your_key_here  # 可选
 ```
 
 ### 4. 运行服务
 
 ```bash
-python -m cmd.server.main
-```
-
-或使用 Makefile：
-
-```bash
+# 确保虚拟环境已激活
 make run
+# 或
+python -m cmd.server.main
 ```
 
 ### 5. 测试服务
@@ -195,7 +211,9 @@ assistant_ai/
 │   │   └── ai_service.py
 │   └── config/                 # 配置
 │       └── config.py
-└── requirements.txt
+├── .venv/                      # 虚拟环境（不提交到 Git）
+├── requirements.txt
+└── Makefile
 ```
 
 ## 下一步
@@ -208,6 +226,7 @@ assistant_ai/
 
 ## 参考文档
 
+- [开发指南](DEVELOPMENT.md) - 详细的开发环境设置
 - [Gateway 集成指南](GATEWAY_INTEGRATION.md)
+- [API 使用说明](API_USAGE.md)
 - [README](README.md)
-

@@ -47,35 +47,42 @@ assistant_ai/
 
 ## 快速开始
 
-### 前置要求
+### 本地开发（使用虚拟环境）
 
-1. Python 3.11+
-2. `assistant_ai_api` 已生成 Protocol Buffer 代码
-3. Docker 和 Docker Compose（可选）
+**注意**：虚拟环境仅用于本地开发，Docker 容器不需要虚拟环境。
 
-### 本地开发
-
-1. **安装依赖**
+1. **创建虚拟环境（推荐）**
 
 ```bash
-make install
+# 使用 Makefile（自动创建）
+make venv
+
+# 或手动创建
+python3 -m venv .venv
+source .venv/bin/activate  # macOS/Linux
 # 或
-pip install -r requirements.txt
+.venv\Scripts\activate  # Windows
 ```
 
-2. **生成 Protocol Buffer 代码**
+2. **安装依赖**
 
-在 `assistant_ai_api` 目录下：
 ```bash
-cd ../assistant_ai_api
-make gen-proto
+# 使用 Makefile（自动检测并使用虚拟环境，包含 API 安装）
+make install
+
+# 或手动安装（确保已激活虚拟环境）
+pip install -r requirements.txt
+# 然后安装 assistant_ai_api
+python scripts/install_api.sh
 ```
+
+**注意**：`assistant_ai_api` 目前通过脚本从 GitHub 仓库安装。如果仓库的 `python` 目录添加了 `setup.py`，就可以直接通过 pip 安装。
 
 3. **配置环境变量**
 
 创建 `.env` 文件：
 ```env
-GRPC_ADDR=:50052
+GRPC_ADDR=0.0.0.0:50052
 LOG_LEVEL=INFO
 OPENAI_API_KEY=your_key_here  # 可选
 ANTHROPIC_API_KEY=your_key_here  # 可选
@@ -89,13 +96,19 @@ make run
 python -m cmd.server.main
 ```
 
-### Docker 部署
+### Docker 部署（不需要虚拟环境）
+
+**重要**：Docker 容器本身就是隔离环境，不需要虚拟环境。
 
 1. **构建镜像**
 
 ```bash
 make build
 ```
+
+构建时会自动：
+- 安装所有 Python 依赖
+- 从 GitHub 安装 `assistant_ai_api`
 
 2. **使用 docker-compose**
 
@@ -185,7 +198,7 @@ grpcurl -plaintext \
 
 ### 环境变量
 
-- `GRPC_ADDR`: gRPC 监听地址（默认: `:50052`）
+- `GRPC_ADDR`: gRPC 监听地址（默认: `0.0.0.0:50052`）
 - `LOG_LEVEL`: 日志级别（默认: `INFO`）
 - `OPENAI_API_KEY`: OpenAI API 密钥（可选）
 - `ANTHROPIC_API_KEY`: Anthropic API 密钥（可选）
@@ -210,7 +223,14 @@ grpcurl -plaintext \
 - ✅ Docker 容器化，加入现有网络
 - ✅ 相同的部署和运维模式
 
+## 参考文档
+
+- [开发指南](DEVELOPMENT.md) - 详细的开发环境设置（虚拟环境）
+- [快速开始](QUICKSTART.md) - 快速上手指南
+- [Docker 部署](QUICKSTART_DOCKER.md) - Docker 部署指南
+- [Gateway 集成](GATEWAY_INTEGRATION.md) - Gateway 集成说明
+- [API 使用说明](API_USAGE.md) - assistant_ai_api 使用说明
+
 ## License
 
 MIT
-
