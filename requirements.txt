@@ -1,6 +1,7 @@
 # gRPC
 grpcio>=1.62.0
 grpcio-tools>=1.62.0
+grpcio-reflection>=1.62.0
 
 # Assistant AI API (from Git repository)
 # Note: Currently installed via script/install_api.sh

@@ -11,7 +11,7 @@ curl -X POST http://localhost:8080/admin/backends \
   -H "Content-Type: application/json" \
   -d '{
     "name": "ai",
-    "addr": "assistant-ai-app:50052",
+    "addr": "assistant-ai-app:50051",
     "description": "AI Service with LangChain/LangGraph agents"
   }'
 ```
@@ -72,8 +72,8 @@ backends:
   - name: "account"
     addr: "127.0.0.1:50051"
   - name: "ai"
-    addr: "127.0.0.1:50052"  # 本地开发
-    # addr: "assistant-ai-app:50052"  # Docker 环境
+    addr: "127.0.0.1:50051"  # 本地开发
+    # addr: "assistant-ai-app:50051"  # Docker 环境
 
 routes:
   - http_method: "POST"
@@ -146,7 +146,7 @@ curl http://localhost:8080/v1/ai/agents
 
 ## 验证清单
 
-- [ ] AI 服务已启动并监听 `:50052`
+- [ ] AI 服务已启动并监听 `:50051`
 - [ ] Gateway 已添加 AI 服务 backend
 - [ ] Gateway 已配置路由规则
 - [ ] 测试统一入口接口

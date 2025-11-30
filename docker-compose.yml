@@ -5,13 +5,13 @@ services:
     container_name: assistant-ai-app
     restart: unless-stopped
     environment:
-      GRPC_ADDR: "0.0.0.0:50052"
+      GRPC_ADDR: "0.0.0.0:50051"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # LLM API keys (set in .env file)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
-      - "50052:50052"
+      - "50052:50051"
     networks:
       - assistant-net
 

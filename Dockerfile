@@ -55,9 +55,9 @@ COPY . .
 ENV PYTHONPATH=/app
 
 # Default gRPC address
-ENV GRPC_ADDR=0.0.0.0:50052
+ENV GRPC_ADDR=0.0.0.0:50051
 
-EXPOSE 50052
+EXPOSE 50051
 
 # Run the server
 CMD ["python", "-m", "cmd.server.main"]

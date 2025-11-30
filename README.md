@@ -82,7 +82,7 @@ python scripts/install_api.sh
 
 创建 `.env` 文件：
 ```env
-GRPC_ADDR=0.0.0.0:50052
+GRPC_ADDR=0.0.0.0:50051
 LOG_LEVEL=INFO
 OPENAI_API_KEY=your_key_here  # 可选
 ANTHROPIC_API_KEY=your_key_here  # 可选
@@ -175,7 +175,7 @@ Gateway 配置示例：
 ```yaml
 backends:
   - name: "ai"
-    addr: "assistant-ai-app:50052"
+    addr: "assistant-ai-app:50051"
 
 routes:
   - http_method: "POST"
@@ -191,14 +191,14 @@ routes:
 ```bash
 grpcurl -plaintext \
   -d '{"user_id":"user123","message":"Hello"}' \
-  localhost:50052 ai.v1.AIService/Process
+  localhost:50051 ai.v1.AIService/Process
 ```
 
 ## 配置说明
 
 ### 环境变量
 
-- `GRPC_ADDR`: gRPC 监听地址（默认: `0.0.0.0:50052`）
+- `GRPC_ADDR`: gRPC 监听地址（默认: `0.0.0.0:50051`）
 - `LOG_LEVEL`: 日志级别（默认: `INFO`）
 - `OPENAI_API_KEY`: OpenAI API 密钥（可选）
 - `ANTHROPIC_API_KEY`: Anthropic API 密钥（可选）

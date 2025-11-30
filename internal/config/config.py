@@ -9,7 +9,7 @@ class Config(BaseSettings):
     """Application configuration."""
     
     # gRPC server
-    grpc_addr: str = "0.0.0.0:50052"
+    grpc_addr: str = "0.0.0.0:50051"
     
     # LLM configuration
     openai_api_key: Optional[str] = None

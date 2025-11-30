@@ -18,11 +18,13 @@ sys.path.insert(0, str(project_root))
 
 import grpc
 from concurrent import futures
+from grpc_reflection.v1alpha import reflection
 
 # Import generated protobuf code from installed package
 # assistant_ai_api is installed via pip from Git repository
 try:
     from pb.ai.v1 import ai_pb2_grpc
+    from pb.ai.v1 import ai_pb2
 except ImportError as e:
     print(f"Error: Could not import generated protobuf code: {e}")
     print("Please ensure assistant_ai_api is installed:")
@@ -56,6 +58,13 @@ def create_server(registry: AgentRegistry, router: AgentRouter, orchestrator: Or
     # Add servicer
     servicer = AIServiceServicer(registry, router, orchestrator)
     ai_pb2_grpc.add_AIServiceServicer_to_server(servicer, server)
+    
+    # Enable gRPC reflection for dynamic type discovery
+    SERVICE_NAMES = (
+        ai_pb2.DESCRIPTOR.services_by_name['AIService'].full_name,
+        reflection.SERVICE_NAME,
+    )
+    reflection.enable_server_reflection(SERVICE_NAMES, server)
     
     return server
 
