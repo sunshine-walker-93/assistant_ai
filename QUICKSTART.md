@@ -129,7 +129,7 @@ curl -X POST http://localhost:8080/admin/routes \
     "backend_name": "ai",
     "backend_service": "ai.v1.AIService",
     "backend_method": "Process",
-    "timeout_ms": 30000
+    "timeout_ms": 60000
   }'
 ```
 
