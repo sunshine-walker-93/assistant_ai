@@ -14,6 +14,9 @@ class Config(BaseSettings):
     # LLM configuration
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
+    openai_base_url: Optional[str] = None  # Custom base URL for local models (e.g., Ollama, LocalAI)
+    openai_model: str = "gpt-3.5-turbo"  # OpenAI model name
+    openai_temperature: float = 0.7  # Model temperature
     
     # Agent configuration
     default_agent: Optional[str] = None

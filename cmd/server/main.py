@@ -37,6 +37,7 @@ from internal.config.config import load_config
 from internal.agents.registry import AgentRegistry
 from internal.agents.router import AgentRouter
 from internal.agents.simple_agent import SimpleAgent
+from internal.agents.langchain_agent import LangChainAgent
 from internal.graph.orchestrator import Orchestrator
 from internal.service.ai_service import AIServiceServicer
 
@@ -80,9 +81,31 @@ async def serve():
     router = AgentRouter(registry)
     orchestrator = Orchestrator()
     
-    # Register default agent
+    # Register agents
+    # Simple agent for testing
     simple_agent = SimpleAgent()
     registry.register(simple_agent)
+    logger.info("Registered SimpleAgent")
+    
+    # LangChain agent with OpenAI or local model (if configured)
+    # Supports both OpenAI API and local models (Ollama, LocalAI, etc.)
+    if config.openai_api_key or config.openai_base_url:
+        try:
+            langchain_agent = LangChainAgent(
+                api_key=config.openai_api_key,
+                base_url=config.openai_base_url,
+                model_name=config.openai_model,
+                temperature=config.openai_temperature
+            )
+            registry.register(langchain_agent)
+            if config.openai_base_url:
+                logger.info(f"Registered LangChainAgent with local model: {config.openai_model} at {config.openai_base_url}")
+            else:
+                logger.info(f"Registered LangChainAgent with OpenAI model: {config.openai_model}")
+        except Exception as e:
+            logger.warning(f"Failed to register LangChainAgent: {e}")
+    else:
+        logger.info("OPENAI_API_KEY and OPENAI_BASE_URL not configured, skipping LangChainAgent registration")
     
     # Create and start server
     server = create_server(registry, router, orchestrator)

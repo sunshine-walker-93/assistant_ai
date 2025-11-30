@@ -14,7 +14,8 @@ class SimpleAgent(BaseAgent):
         metadata = AgentMetadata(
             name="simple",
             description="A simple echo agent for testing",
-            capabilities=["echo", "test"]
+            capabilities=["echo", "test"],
+            is_active=True  # 显式设置为 True，确保默认 agent 是激活的
         )
         super().__init__(metadata)
     
