@@ -55,7 +55,115 @@ make stop
 docker compose stop
 ```
 
+## 配置本地模型（Ollama/LocalAI）
+
+如果 Ollama 或其他本地模型服务运行在宿主机上，需要在 Docker 容器中访问：
+
+### 步骤 1：创建 `.env` 文件
+
+在 `assistant_ai` 目录下创建 `.env` 文件：
+
+```bash
+cd assistant_ai
+cat > .env << 'EOF'
+OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+OPENAI_MODEL=deepseek-r1:14b
+EOF
+```
+
+**重要提示**：
+- 使用 `host.docker.internal` 而不是 `localhost`，因为容器内的 `localhost` 指向容器本身，而不是宿主机
+- 将 `deepseek-r1:14b` 替换为你实际安装的模型名称（可通过 `curl http://localhost:11434/v1/models` 查看）
+
+### macOS/Windows
+
+`.env` 文件配置示例：
+```env
+OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+OPENAI_MODEL=deepseek-r1:14b
+```
+
+### Linux
+
+在 Linux 上，可能需要使用宿主机的 IP 地址或配置网络模式：
+
+**方式一**：使用 host.docker.internal（推荐）
+```env
+OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+```
+
+**方式二**：使用宿主机 IP
+```bash
+# 获取宿主机 IP
+ip addr show docker0 | grep inet
+# 然后在 .env 中使用该 IP
+OPENAI_BASE_URL=http://172.17.0.1:11434/v1
+```
+
+**方式三**：使用 host 网络模式（不推荐，会失去网络隔离）
+在 `docker-compose.yml` 中添加：
+```yaml
+network_mode: host
+```
+
 ## 常见问题
+
+### 问题：容器无法访问宿主机的 Ollama 服务
+
+**症状**：配置了 `http://localhost:11434/v1` 但连接失败，出现 `APIConnectionError`
+
+**解决方案**：
+
+1. **创建 `.env` 文件**（如果不存在）：
+   ```bash
+   cd assistant_ai
+   cat > .env << EOF
+   OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+   OPENAI_MODEL=deepseek-r1:14b
+   EOF
+   ```
+   注意：将 `deepseek-r1:14b` 替换为你实际安装的模型名称。
+
+2. **验证 Ollama 在宿主机上运行**：
+   ```bash
+   curl http://localhost:11434/v1/models
+   ```
+
+3. **测试容器到宿主机的连接**：
+   ```bash
+   # 使用测试脚本（推荐）
+   ./scripts/test_ollama_connection.sh
+   
+   # 或手动测试
+   docker compose exec app curl http://host.docker.internal:11434/v1/models
+   ```
+
+4. **重启容器以应用新配置**：
+   ```bash
+   docker compose down
+   docker compose up -d
+   ```
+
+5. **检查日志确认配置已加载**：
+   ```bash
+   docker compose logs app | grep -i "langchain\|ollama\|base_url"
+   ```
+   应该看到类似：
+   ```
+   LangChainAgent configuration - OPENAI_API_KEY: None, OPENAI_BASE_URL: http://host.docker.internal:11434/v1, MODEL: deepseek-r1:14b
+   Registered LangChainAgent (ACTIVE) with local model: deepseek-r1:14b at http://host.docker.internal:11434/v1
+   ```
+
+**如果仍然失败**：
+
+- **macOS/Windows**：确保 Docker Desktop 设置中启用了 "Allow connections from containers to host"
+- **Linux**：可能需要使用宿主机 IP 而不是 `host.docker.internal`：
+  ```bash
+  # 获取宿主机 IP
+  ip addr show docker0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+  # 然后在 .env 中使用该 IP
+  OPENAI_BASE_URL=http://172.17.0.1:11434/v1
+  ```
 
 ### 问题：容器启动失败，提示找不到 protobuf 代码
 

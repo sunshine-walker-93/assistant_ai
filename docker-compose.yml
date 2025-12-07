@@ -9,9 +9,19 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # LLM API keys (set in .env file)
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # For local models (Ollama, LocalAI, etc.)
+      # macOS/Windows: use host.docker.internal instead of localhost
+      # Example: http://host.docker.internal:11434/v1
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-3.5-turbo}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ports:
       - "50052:50051"
+    # Enable access to host machine from container
+    # macOS/Windows: host.docker.internal is automatically available
+    # Linux: may need to add extra_hosts: ["host.docker.internal:host-gateway"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - assistant-net
 

@@ -3,6 +3,7 @@
 import os
 from typing import Optional
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 
 
 class Config(BaseSettings):
@@ -24,6 +25,14 @@ class Config(BaseSettings):
     
     # Logging
     log_level: str = "INFO"
+    
+    @field_validator('openai_api_key', 'anthropic_api_key', 'openai_base_url', mode='before')
+    @classmethod
+    def normalize_empty_string(cls, v):
+        """Convert empty strings to None."""
+        if v == "" or (isinstance(v, str) and v.strip() == ""):
+            return None
+        return v
     
     class Config:
         env_file = ".env"

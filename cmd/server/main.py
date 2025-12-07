@@ -89,23 +89,32 @@ async def serve():
     
     # LangChain agent with OpenAI or local model (if configured)
     # Supports both OpenAI API and local models (Ollama, LocalAI, etc.)
-    if config.openai_api_key or config.openai_base_url:
-        try:
-            langchain_agent = LangChainAgent(
-                api_key=config.openai_api_key,
-                base_url=config.openai_base_url,
-                model_name=config.openai_model,
-                temperature=config.openai_temperature
-            )
-            registry.register(langchain_agent)
+    # Note: We always try to register LangChainAgent, but it will be inactive if not properly configured
+    try:
+        # Log configuration values (mask API key for security)
+        api_key_display = "***" if config.openai_api_key else "None"
+        base_url_display = config.openai_base_url if config.openai_base_url else "None"
+        logger.info(f"LangChainAgent configuration - OPENAI_API_KEY: {api_key_display}, OPENAI_BASE_URL: {base_url_display}, MODEL: {config.openai_model}")
+        
+        langchain_agent = LangChainAgent(
+            api_key=config.openai_api_key,
+            base_url=config.openai_base_url,
+            model_name=config.openai_model,
+            temperature=config.openai_temperature
+        )
+        registry.register(langchain_agent)
+        
+        # Log registration status
+        if langchain_agent.metadata.is_active:
             if config.openai_base_url:
-                logger.info(f"Registered LangChainAgent with local model: {config.openai_model} at {config.openai_base_url}")
+                logger.info(f"Registered LangChainAgent (ACTIVE) with local model: {config.openai_model} at {config.openai_base_url}")
             else:
-                logger.info(f"Registered LangChainAgent with OpenAI model: {config.openai_model}")
-        except Exception as e:
-            logger.warning(f"Failed to register LangChainAgent: {e}")
-    else:
-        logger.info("OPENAI_API_KEY and OPENAI_BASE_URL not configured, skipping LangChainAgent registration")
+                logger.info(f"Registered LangChainAgent (ACTIVE) with OpenAI model: {config.openai_model}")
+        else:
+            logger.warning(f"Registered LangChainAgent (INACTIVE) - Please configure OPENAI_API_KEY (for OpenAI API) or OPENAI_BASE_URL (for local models)")
+            logger.warning(f"  Current values - OPENAI_API_KEY: {'set' if config.openai_api_key else 'not set'}, OPENAI_BASE_URL: {'set' if config.openai_base_url else 'not set'}")
+    except Exception as e:
+        logger.error(f"Failed to register LangChainAgent: {e}", exc_info=True)
     
     # Create and start server
     server = create_server(registry, router, orchestrator)

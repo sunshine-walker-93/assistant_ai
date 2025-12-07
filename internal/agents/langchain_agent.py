@@ -27,10 +27,41 @@ class LangChainAgent(BaseAgent):
                        For LocalAI: depends on configured models
             temperature: Model temperature (default: 0.7)
         """
+        # Normalize inputs: treat empty strings as None
+        api_key_original = api_key
+        base_url_original = base_url
+        api_key = api_key.strip() if api_key else None
+        base_url = base_url.strip() if base_url else None
+        
+        # Log normalized values for debugging
+        logger.debug(f"LangChainAgent init - api_key: {'set' if api_key else 'None'}, base_url: {base_url if base_url else 'None'}")
+        
+        # Determine if using local model or OpenAI API
+        has_base_url = base_url is not None and base_url != ""
+        has_valid_api_key = api_key is not None and api_key != "" and api_key != "not-needed"
+        
+        logger.debug(f"LangChainAgent validation - has_base_url: {has_base_url}, has_valid_api_key: {has_valid_api_key}")
+        
         # Check if agent should be active
-        # Active if base_url is provided (local model) OR api_key is provided (OpenAI)
-        is_active = (base_url is not None and base_url.strip() != "") or \
-                   (api_key is not None and api_key.strip() != "")
+        # For local model: base_url must be provided
+        # For OpenAI API: valid api_key must be provided (not empty, not "not-needed")
+        is_local_model = has_base_url
+        is_openai_api = not has_base_url and has_valid_api_key
+        is_active = is_local_model or is_openai_api
+        
+        logger.debug(f"LangChainAgent status - is_local_model: {is_local_model}, is_openai_api: {is_openai_api}, is_active: {is_active}")
+        
+        # Validate configuration
+        if not is_active:
+            if base_url is None and (api_key is None or api_key == ""):
+                logger.warning("LangChainAgent initialized without API key or base_url, agent is inactive")
+                logger.warning(f"  To activate: Set OPENAI_API_KEY (for OpenAI API) or OPENAI_BASE_URL (for local models)")
+            elif base_url is None and api_key == "not-needed":
+                logger.error("Invalid configuration: Cannot use 'not-needed' as API key for OpenAI API. "
+                           "Please set OPENAI_API_KEY to a valid key or set OPENAI_BASE_URL for local models.")
+            else:
+                logger.warning("LangChainAgent configuration invalid, agent is inactive")
+                logger.warning(f"  api_key: {'set' if api_key else 'None'}, base_url: {base_url if base_url else 'None'}")
         
         metadata = AgentMetadata(
             name="langchain",
@@ -49,32 +80,39 @@ class LangChainAgent(BaseAgent):
                     "streaming": True  # Enable streaming for process_stream
                 }
                 
-                # Set API key (for local models, can be a placeholder)
-                if api_key:
-                    llm_params["openai_api_key"] = api_key
-                elif base_url:
-                    # For local models without auth, use a placeholder
-                    llm_params["openai_api_key"] = "not-needed"
-                
-                # Set base URL for local models
-                if base_url:
+                # Set API key based on configuration type
+                if is_local_model:
+                    # For local models: use provided api_key or "not-needed" placeholder
+                    if api_key and api_key != "not-needed":
+                        llm_params["openai_api_key"] = api_key
+                    else:
+                        # For local models without auth, use a placeholder
+                        llm_params["openai_api_key"] = "not-needed"
                     llm_params["base_url"] = base_url
-                    logger.info(f"LangChainAgent initialized with local model at {base_url}")
+                    logger.info(f"LangChainAgent initialized with local model: {model_name} at {base_url}")
+                elif is_openai_api:
+                    # For OpenAI API: must have valid API key
+                    # Double-check that we have a valid API key before creating LLM
+                    if not api_key or api_key == "" or api_key == "not-needed":
+                        raise ValueError("Invalid API key for OpenAI API. Cannot use 'not-needed' without base_url.")
+                    llm_params["openai_api_key"] = api_key
+                    logger.info(f"LangChainAgent initialized with OpenAI model: {model_name}")
                 
                 self.llm = ChatOpenAI(**llm_params)
-                
-                if base_url:
-                    logger.info(f"LangChainAgent initialized with local model: {model_name} at {base_url}")
-                else:
-                    logger.info(f"LangChainAgent initialized with OpenAI model: {model_name}")
             except Exception as e:
                 logger.error(f"Failed to initialize LangChainAgent: {e}", exc_info=True)
                 # Disable agent if initialization fails
                 self.metadata.is_active = False
                 self.llm = None
         else:
-            logger.warning("LangChainAgent initialized without API key or base_url, agent is inactive")
             self.llm = None
+            # Store configuration info for error messages
+            self._config_info = {
+                "api_key_set": api_key is not None,
+                "api_key_value": "not-needed" if api_key == "not-needed" else ("set" if api_key else "None"),
+                "base_url_set": base_url is not None,
+                "base_url_value": base_url if base_url else "None"
+            }
     
     async def process(self, message: str, context: Dict[str, Any] = None) -> str:
         """
@@ -88,7 +126,15 @@ class LangChainAgent(BaseAgent):
             AI response text
         """
         if not self.metadata.is_active or self.llm is None:
-            return "Error: LangChain agent is not active. Please configure OPENAI_API_KEY or OPENAI_BASE_URL."
+            config_info = getattr(self, '_config_info', {})
+            api_key_status = config_info.get('api_key_value', 'unknown')
+            base_url_status = config_info.get('base_url_value', 'unknown')
+            
+            if api_key_status == "not-needed" and base_url_status == "None":
+                return "Error: LangChain agent is not active. Invalid configuration: OPENAI_API_KEY='not-needed' but OPENAI_BASE_URL is not set. " \
+                       "Please set OPENAI_BASE_URL (for local models) or set OPENAI_API_KEY to a valid key (for OpenAI API)."
+            else:
+                return "Error: LangChain agent is not active. Please configure OPENAI_API_KEY (for OpenAI API) or OPENAI_BASE_URL (for local models)."
         
         try:
             logger.info(f"LangChainAgent processing: {message[:100]}...")
@@ -121,8 +167,27 @@ class LangChainAgent(BaseAgent):
             return response_text
             
         except Exception as e:
-            logger.error(f"Error in LangChainAgent.process: {e}", exc_info=True)
-            return f"Error: Failed to process message. {str(e)}"
+            error_msg = str(e)
+            error_type = type(e).__name__
+            logger.error(f"Error in LangChainAgent.process: {error_type}: {error_msg}", exc_info=True)
+            
+            # Provide more helpful error messages for common issues
+            if "connection" in error_msg.lower() or "connect" in error_msg.lower() or "APIConnectionError" in error_type:
+                # Connection error - check configuration
+                if hasattr(self, 'llm') and self.llm:
+                    base_url = getattr(self.llm, 'openai_api_base', None) or "OpenAI API"
+                    return f"Error: Connection failed to {base_url}. " \
+                           f"Please check: 1) If using local model, ensure the service is running and OPENAI_BASE_URL is correct. " \
+                           f"2) If using OpenAI API, check your network connection and OPENAI_API_KEY."
+                else:
+                    return f"Error: Connection error. {error_msg}"
+            elif "invalid_api_key" in error_msg.lower() or "incorrect api key" in error_msg.lower():
+                return f"Error: Invalid API key. Please check your OPENAI_API_KEY environment variable. " \
+                       f"If using a local model, ensure OPENAI_BASE_URL is set correctly."
+            elif "api key" in error_msg.lower():
+                return f"Error: API key issue. {error_msg}"
+            else:
+                return f"Error: Failed to process message. {error_type}: {error_msg}"
     
     async def process_stream(self, message: str, context: Dict[str, Any] = None) -> AsyncIterator[str]:
         """
@@ -136,7 +201,15 @@ class LangChainAgent(BaseAgent):
             Response chunks
         """
         if not self.metadata.is_active or self.llm is None:
-            yield "Error: LangChain agent is not active. Please configure OPENAI_API_KEY or OPENAI_BASE_URL."
+            config_info = getattr(self, '_config_info', {})
+            api_key_status = config_info.get('api_key_value', 'unknown')
+            base_url_status = config_info.get('base_url_value', 'unknown')
+            
+            if api_key_status == "not-needed" and base_url_status == "None":
+                yield "Error: LangChain agent is not active. Invalid configuration: OPENAI_API_KEY='not-needed' but OPENAI_BASE_URL is not set. " \
+                      "Please set OPENAI_BASE_URL (for local models) or set OPENAI_API_KEY to a valid key (for OpenAI API)."
+            else:
+                yield "Error: LangChain agent is not active. Please configure OPENAI_API_KEY (for OpenAI API) or OPENAI_BASE_URL (for local models)."
             return
         
         try:
@@ -168,6 +241,26 @@ class LangChainAgent(BaseAgent):
                     yield chunk_text
                     
         except Exception as e:
-            logger.error(f"Error in LangChainAgent.process_stream: {e}", exc_info=True)
-            yield f"Error: Failed to process message. {str(e)}"
+            error_msg = str(e)
+            error_type = type(e).__name__
+            logger.error(f"Error in LangChainAgent.process_stream: {error_type}: {error_msg}", exc_info=True)
+            
+            # Provide more helpful error messages for common issues
+            if "connection" in error_msg.lower() or "connect" in error_msg.lower() or "APIConnectionError" in error_type:
+                # Connection error - check configuration
+                if hasattr(self, 'llm') and self.llm:
+                    # Try to get base_url from llm if available
+                    base_url = getattr(self.llm, 'openai_api_base', None) or "OpenAI API"
+                    yield f"Error: Connection failed to {base_url}. " \
+                          f"Please check: 1) If using local model, ensure the service is running and OPENAI_BASE_URL is correct. " \
+                          f"2) If using OpenAI API, check your network connection and OPENAI_API_KEY."
+                else:
+                    yield f"Error: Connection error. {error_msg}"
+            elif "invalid_api_key" in error_msg.lower() or "incorrect api key" in error_msg.lower():
+                yield f"Error: Invalid API key. Please check your OPENAI_API_KEY environment variable. " \
+                      f"If using a local model, ensure OPENAI_BASE_URL is set correctly."
+            elif "api key" in error_msg.lower():
+                yield f"Error: API key issue. {error_msg}"
+            else:
+                yield f"Error: Failed to process message. {error_type}: {error_msg}"
 

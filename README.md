@@ -201,9 +201,38 @@ grpcurl -plaintext \
 - `GRPC_ADDR`: gRPC 监听地址（默认: `0.0.0.0:50051`）
 - `LOG_LEVEL`: 日志级别（默认: `INFO`）
 - `OPENAI_API_KEY`: OpenAI API 密钥（可选）
+- `OPENAI_BASE_URL`: 自定义 API 基础 URL（可选）
+  - 用于本地模型（Ollama、LocalAI 等）
+  - **Docker 环境**：使用 `http://host.docker.internal:11434/v1`（macOS/Windows）或 `http://172.17.0.1:11434/v1`（Linux）
+  - **本地开发**：使用 `http://localhost:11434/v1`
+- `OPENAI_MODEL`: 模型名称（默认: `gpt-3.5-turbo`）
+  - Ollama 示例：`llama2`, `mistral`, `qwen` 等
+- `OPENAI_TEMPERATURE`: 模型温度（默认: `0.7`）
 - `ANTHROPIC_API_KEY`: Anthropic API 密钥（可选）
 - `DEFAULT_AGENT`: 默认 Agent 名称（可选）
 - `ENABLE_ORCHESTRATION`: 启用 LangGraph 编排（默认: `false`）
+
+### 配置本地模型（Ollama）
+
+**本地开发环境**：
+```env
+OPENAI_BASE_URL=http://localhost:11434/v1
+OPENAI_MODEL=llama2
+```
+
+**Docker 环境**（macOS/Windows）：
+```env
+OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+OPENAI_MODEL=llama2
+```
+
+**Docker 环境**（Linux）：
+```env
+OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+# 或使用宿主机 IP
+# OPENAI_BASE_URL=http://172.17.0.1:11434/v1
+OPENAI_MODEL=llama2
+```
 
 ## 开发计划
 
