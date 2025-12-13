@@ -55,6 +55,55 @@ make stop
 docker compose stop
 ```
 
+## Redis 服务
+
+项目包含 Redis 服务，用于缓存和数据存储。
+
+### 启动 Redis
+
+```bash
+# 启动所有服务（包括 Redis）
+docker compose up -d
+
+# 或只启动 Redis
+docker compose up -d redis
+```
+
+### 连接 Redis
+
+**从本地服务连接：**
+- 主机：`localhost`
+- 端口：`6379`
+- 密码：环境变量 `REDIS_PASSWORD` 的值（默认：`redis123`）
+
+**从容器内服务连接：**
+- 主机：`redis`（服务名）
+- 端口：`6379`
+- 密码：环境变量 `REDIS_PASSWORD` 的值（默认：`redis123`）
+
+### 测试 Redis 连接
+
+```bash
+# 从本地测试（需要安装 redis-cli）
+redis-cli -h localhost -p 6379 -a redis123 ping
+
+# 从容器内测试
+docker exec -it assistant-ai-app redis-cli -h redis -p 6379 -a redis123 ping
+
+# 或直接进入 Redis 容器测试
+docker exec -it assistant-redis redis-cli -a redis123 ping
+```
+
+### 配置 Redis 密码
+
+在 `.env` 文件中设置：
+
+```env
+REDIS_PASSWORD=your_secure_password_here
+```
+
+**注意**：建议在生产环境中使用强密码，不要使用默认密码。
+
 ## 配置本地模型（Ollama/LocalAI）
 
 如果 Ollama 或其他本地模型服务运行在宿主机上，需要在 Docker 容器中访问：
@@ -81,6 +130,8 @@ EOF
 ```env
 OPENAI_BASE_URL=http://host.docker.internal:11434/v1
 OPENAI_MODEL=deepseek-r1:14b
+# Redis configuration
+REDIS_PASSWORD=your_secure_password_here
 ```
 
 ### Linux

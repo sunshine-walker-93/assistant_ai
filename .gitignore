@@ -46,3 +46,6 @@ logs/
 *_pb2.py
 *_pb2_grpc.py
 
+# Redis data (if stored locally)
+redis-data/
+

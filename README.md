@@ -211,6 +211,7 @@ grpcurl -plaintext \
 - `ANTHROPIC_API_KEY`: Anthropic API 密钥（可选）
 - `DEFAULT_AGENT`: 默认 Agent 名称（可选）
 - `ENABLE_ORCHESTRATION`: 启用 LangGraph 编排（默认: `false`）
+- `REDIS_PASSWORD`: Redis 密码（默认: `redis123`，Docker 环境使用）
 
 ### 配置本地模型（Ollama）
 
