@@ -36,7 +36,6 @@ except ImportError as e:
 from internal.config.config import load_config
 from internal.agents.registry import AgentRegistry
 from internal.agents.router import AgentRouter
-from internal.agents.simple_agent import SimpleAgent
 from internal.agents.langchain_agent import LangChainAgent
 from internal.graph.orchestrator import Orchestrator
 from internal.service.ai_service import AIServiceServicer
@@ -82,11 +81,6 @@ async def serve():
     orchestrator = Orchestrator()
     
     # Register agents
-    # Simple agent for testing
-    simple_agent = SimpleAgent()
-    registry.register(simple_agent)
-    logger.info("Registered SimpleAgent")
-    
     # LangChain agent with OpenAI or local model (if configured)
     # Supports both OpenAI API and local models (Ollama, LocalAI, etc.)
     # Note: We always try to register LangChainAgent, but it will be inactive if not properly configured

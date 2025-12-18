@@ -204,7 +204,7 @@ assistant_ai/
 │   │   ├── base.py            # Agent 基类
 │   │   ├── registry.py        # 注册中心
 │   │   ├── router.py          # 路由策略
-│   │   └── simple_agent.py    # 示例 Agent
+│   │   └── langchain_agent.py # LangChain Agent
 │   ├── graph/                  # LangGraph 编排
 │   │   └── orchestrator.py
 │   ├── service/                # gRPC 服务
